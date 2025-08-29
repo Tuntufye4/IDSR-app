@@ -30,20 +30,42 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: AnimatedOpacity(
-          duration: const Duration(seconds: 8),
-          opacity: _opacity,
-          child: Text(
-            'IDSR',
-            style: TextStyle(
-              fontSize: 80,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[700],
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Center(
+              child: AnimatedOpacity(
+                duration: const Duration(seconds: 8),
+                opacity: _opacity,
+                child: Text(
+                  'IDSR',
+                  style: TextStyle(
+                    fontSize: 80,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[700],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 30.0),
+            child: AnimatedOpacity(
+              duration: const Duration(seconds: 8),
+              opacity: _opacity,
+              child: Text(
+                'V 1.0.0',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+        

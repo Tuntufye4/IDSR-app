@@ -20,6 +20,7 @@ class _ChartsPageState extends State<ChartsPage> {
   String _groupBy = 'district';
   String? _selectedYear;
   String? _selectedClassification;
+  int? _touchedPieIndex;
 
   @override
   void initState() {
@@ -40,6 +41,13 @@ class _ChartsPageState extends State<ChartsPage> {
         SnackBar(content: Text('Error loading cases: $e')),
       );
     }
+  }
+
+  bool _filterCase(IdsrCase c) {
+    if (_selectedYear != null && c.year?.toString() != _selectedYear) return false;
+    if (_selectedClassification != null &&
+        c.caseClassification?.toLowerCase() != _selectedClassification?.toLowerCase()) return false;
+    return true;
   }
 
   void _calculateDiseaseCounts() {
@@ -68,17 +76,6 @@ class _ChartsPageState extends State<ChartsPage> {
     _groupedCounts = counts;
   }
 
-  bool _filterCase(IdsrCase c) {
-    if (_selectedYear != null && c.year?.toString() != _selectedYear) {
-      return false;
-    }
-    if (_selectedClassification != null &&
-        c.caseClassification?.toLowerCase() != _selectedClassification?.toLowerCase()) {
-      return false;
-    }
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
     final diseaseEntries = _diseaseCounts.entries.toList();
@@ -100,55 +97,59 @@ class _ChartsPageState extends State<ChartsPage> {
     }).toList();
 
     final pieEntries = _groupedCounts.entries.toList();
-
     final availableYears = _cases.map((e) => e.year?.toString()).whereType<String>().toSet().toList();
     final classifications = _cases.map((e) => e.caseClassification).whereType<String>().toSet().toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Disease Charts')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                DropdownButton<String>(
-                  value: _selectedYear,
-                  hint: const Text("Filter by year"),
-                  items: availableYears
-                      .map((year) => DropdownMenuItem(value: year, child: Text(year)))
-                      .toList(),
-                  onChanged: (val) => setState(() {
-                    _selectedYear = val;
-                    _calculateDiseaseCounts();
-                    _calculateGroupedCounts();
-                  }),
-                ),
-                const SizedBox(width: 16),
-                DropdownButton<String>(
-                  value: _selectedClassification,
-                  hint: const Text("Filter by classification"),
-                  items: classifications
-                      .map((cls) => DropdownMenuItem(value: cls, child: Text(cls)))
-                      .toList(),
-                  onChanged: (val) => setState(() {
-                    _selectedClassification = val;
-                    _calculateDiseaseCounts();
-                    _calculateGroupedCounts();
-                  }),
-                ),
-                const SizedBox(width: 16),
-                DropdownButton<String>(
-                  value: _groupBy,
-                  items: ['district', 'region', 'outcome']
-                      .map((g) => DropdownMenuItem(value: g, child: Text('Group by $g')))
-                      .toList(),
-                  onChanged: (val) => setState(() {
-                    _groupBy = val!;
-                    _calculateGroupedCounts();
-                  }),
-                ),
-              ],
+            // Filters
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  DropdownButton<String>(
+                    value: _selectedYear,
+                    hint: const Text("Filter by year"),
+                    items: availableYears
+                        .map((year) => DropdownMenuItem(value: year, child: Text(year)))
+                        .toList(),
+                    onChanged: (val) => setState(() {
+                      _selectedYear = val;
+                      _calculateDiseaseCounts();
+                      _calculateGroupedCounts();
+                    }),
+                  ),
+                  const SizedBox(width: 16),
+                  DropdownButton<String>(
+                    value: _selectedClassification,
+                    hint: const Text("Filter by classification"),
+                    items: classifications
+                        .map((cls) => DropdownMenuItem(value: cls, child: Text(cls)))
+                        .toList(),
+                    onChanged: (val) => setState(() {
+                      _selectedClassification = val;
+                      _calculateDiseaseCounts();
+                      _calculateGroupedCounts();
+                    }),
+                  ),
+                  const SizedBox(width: 16),
+                  DropdownButton<String>(
+                    value: _groupBy,
+                    items: ['district', 'region', 'outcome']
+                        .map((g) => DropdownMenuItem(value: g, child: Text('Group by $g')))
+                        .toList(),
+                    onChanged: (val) => setState(() {
+                      _groupBy = val!;
+                      _calculateGroupedCounts();
+                    }),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -169,9 +170,7 @@ class _ChartsPageState extends State<ChartsPage> {
                           showTitles: true,
                           getTitlesWidget: (value, meta) {
                             final index = value.toInt();
-                            if (index < 0 || index >= diseaseEntries.length) {
-                              return const SizedBox.shrink();
-                            }
+                            if (index < 0 || index >= diseaseEntries.length) return const SizedBox.shrink();
                             return SideTitleWidget(
                               axisSide: meta.axisSide,
                               child: Text(
@@ -183,6 +182,19 @@ class _ChartsPageState extends State<ChartsPage> {
                           reservedSize: 48,
                         ),
                       ),
+                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        tooltipBgColor: Colors.grey.shade200,
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          final disease = diseaseEntries[group.x.toInt()].key;
+                          final count = rod.toY.toInt();
+                          return BarTooltipItem('$disease\nCount: $count', const TextStyle(color: Colors.black));
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -190,21 +202,39 @@ class _ChartsPageState extends State<ChartsPage> {
 
             const SizedBox(height: 32),
 
-            // Pie Chart
+            // Interactive Pie Chart with tooltip
             if (_groupedCounts.isNotEmpty)
               SizedBox(
-                height: 250,
+                height: 300,
                 child: PieChart(
                   PieChartData(
-                    sections: pieEntries.map((e) {
-                      final percentage = (e.value / _groupedCounts.values.reduce((a, b) => a + b)) * 100;
+                    sections: pieEntries.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final e = entry.value;
+                      final total = _groupedCounts.values.fold<int>(0, (a, b) => a + b);
+                      final percent = (e.value / total) * 100;
+                      final isTouched = _touchedPieIndex == index;
                       return PieChartSectionData(
-                        title: '${e.key} (${percentage.toStringAsFixed(1)}%)',
                         value: e.value.toDouble(),
-                        radius: 80,
-                        titleStyle: const TextStyle(fontSize: 12),
+                        color: Colors.primaries[index % Colors.primaries.length],
+                        radius: isTouched ? 90 : 80,
+                        title: isTouched ? '${e.key}\n${e.value} cases\n${percent.toStringAsFixed(1)}%' : '${percent.toStringAsFixed(1)}%',
+                        titleStyle: TextStyle(
+                          fontSize: isTouched ? 14 : 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       );
                     }).toList(),
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 40,
+                    pieTouchData: PieTouchData(
+                      touchCallback: (event, pieTouchResponse) {
+                        setState(() {
+                          _touchedPieIndex = pieTouchResponse?.touchedSection?.touchedSectionIndex;
+                        });
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -214,4 +244,4 @@ class _ChartsPageState extends State<ChartsPage> {
     );
   }
 }
-  
+      

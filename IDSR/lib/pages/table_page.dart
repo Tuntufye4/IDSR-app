@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '/models/idsr_case.dart';
 import '/api/idsr_api.dart';
-    
 
 class TablePage extends StatefulWidget {
   final IdsrApi api;
@@ -37,7 +36,9 @@ class _TablePageState extends State<TablePage> {
         _currentPage = 0;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading cases: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading cases: $e')),
+      );
     }
   }
 
@@ -83,64 +84,101 @@ class _TablePageState extends State<TablePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cases Table'),
-        actions: [  
+      appBar: AppBar(   
+        actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadCases,
+            tooltip: 'Refresh Table',
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: TextField(
+      body: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            // Search Box
+            TextField(
               controller: _searchController,
-              decoration: const InputDecoration(labelText: 'Search by Name, Disease or District'),
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: const [
-                  DataColumn(label: Text('Patient ID')),
-                  DataColumn(label: Text('Name')),
-                  DataColumn(label: Text('Age')),
-                  DataColumn(label: Text('Sex')),
-                  DataColumn(label: Text('Disease')),
-                  DataColumn(label: Text('District')),
-                  DataColumn(label: Text('Outcome')),
-                  // Add more columns as needed
-                ],
-                rows: _currentPageCases.map((c) {
-                  return DataRow(cells: [
-                    DataCell(Text(c.patientId?.toString() ?? '')),
-                    DataCell(Text(c.fullName ?? '')),
-                    DataCell(Text(c.age?.toString() ?? '')),
-                    DataCell(Text(c.sex ?? '')),
-                    DataCell(Text(c.disease ?? '')),
-                    DataCell(Text(c.district ?? '')),
-                    DataCell(Text(c.outcome ?? '')),
-                  ]);
-                }).toList(),
+              decoration: InputDecoration(
+                labelText: 'Search by Name, Disease, or District',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                prefixIcon: const Icon(Icons.search),
               ),
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(onPressed: _previousPage, child: const Text('Previous')),
-              const SizedBox(width: 20),
-              ElevatedButton(onPressed: _nextPage, child: const Text('Next')),
-            ],
-          ),
-          const SizedBox(height: 10),
-        ],
+            const SizedBox(height: 12),
+
+            // Table inside card
+            Expanded(
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    child: DataTable(
+                      headingRowColor: MaterialStateColor.resolveWith((states) => Colors.blueGrey.shade50),
+                      columnSpacing: 20,
+                      horizontalMargin: 12,
+                      columns: const [
+                        DataColumn(label: Text('Patient ID', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Age', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Sex', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Disease', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('District', style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(label: Text('Outcome', style: TextStyle(fontWeight: FontWeight.bold))),
+                      ],
+                      rows: _currentPageCases.map((c) {
+                        return DataRow(cells: [
+                          DataCell(Text(c.patientId?.toString() ?? '')),
+                          DataCell(Text(c.fullName ?? '')),
+                          DataCell(Text(c.age?.toString() ?? '')),
+                          DataCell(Text(c.sex ?? '')),
+                          DataCell(Text(c.disease ?? '')),
+                          DataCell(Text(c.district ?? '')),
+                          DataCell(Text(c.outcome ?? '')),
+                        ]);
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Pagination Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _previousPage,
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Previous'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                ElevatedButton.icon(
+                  onPressed: _nextPage,
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Next'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }
 }
-   
