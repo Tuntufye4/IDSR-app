@@ -6,7 +6,7 @@ class TablePage extends StatefulWidget {
   final IdsrApi api;
 
   const TablePage({Key? key, required this.api}) : super(key: key);
-
+  
   @override
   State<TablePage> createState() => _TablePageState();
 }
@@ -14,11 +14,11 @@ class TablePage extends StatefulWidget {
 class _TablePageState extends State<TablePage> {
   List<IdsrCase> _cases = [];
   List<IdsrCase> _filteredCases = [];
-
   final TextEditingController _searchController = TextEditingController();
 
   int _currentPage = 0;
   final int _pageSize = 10;
+  bool _sortAscending = true;
 
   @override
   void initState() {
@@ -34,6 +34,7 @@ class _TablePageState extends State<TablePage> {
         _cases = cases;
         _filteredCases = cases;
         _currentPage = 0;
+        _sortByPatientId();
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -51,6 +52,22 @@ class _TablePageState extends State<TablePage> {
             (c.district?.toLowerCase().contains(query) ?? false);
       }).toList();
       _currentPage = 0;
+      _sortByPatientId();
+    });
+  }
+
+  void _sortByPatientId() {
+    _filteredCases.sort((a, b) {
+      final idA = a.patientId ?? 0;
+      final idB = b.patientId ?? 0;
+      return _sortAscending ? idA.compareTo(idB) : idB.compareTo(idA);
+    });
+  }
+
+  void _toggleSort() {
+    setState(() {
+      _sortAscending = !_sortAscending;
+      _sortByPatientId();
     });
   }
 
@@ -61,17 +78,13 @@ class _TablePageState extends State<TablePage> {
 
   void _nextPage() {
     if ((_currentPage + 1) * _pageSize < _filteredCases.length) {
-      setState(() {
-        _currentPage++;
-      });
+      setState(() => _currentPage++);
     }
   }
 
   void _previousPage() {
     if (_currentPage > 0) {
-      setState(() {
-        _currentPage--;
-      });
+      setState(() => _currentPage--);
     }
   }
 
@@ -84,7 +97,7 @@ class _TablePageState extends State<TablePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(   
+      appBar: AppBar(
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -94,9 +107,10 @@ class _TablePageState extends State<TablePage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0), // only horizontal padding
         child: Column(
           children: [
+            const SizedBox(height: 8), // minimal top spacing
             // Search Box
             TextField(
               controller: _searchController,
@@ -108,7 +122,7 @@ class _TablePageState extends State<TablePage> {
                 prefixIcon: const Icon(Icons.search),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8), // minimal spacing before table
 
             // Table inside card
             Expanded(
@@ -121,17 +135,52 @@ class _TablePageState extends State<TablePage> {
                   scrollDirection: Axis.horizontal,
                   child: SingleChildScrollView(
                     child: DataTable(
-                      headingRowColor: MaterialStateColor.resolveWith((states) => Colors.blueGrey.shade50),
+                      sortColumnIndex: 0,
+                      sortAscending: _sortAscending,
+                      headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => Colors.blueGrey.shade50),
                       columnSpacing: 20,
                       horizontalMargin: 12,
-                      columns: const [
-                        DataColumn(label: Text('Patient ID', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Name', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Age', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Sex', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Disease', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('District', style: TextStyle(fontWeight: FontWeight.bold))),
-                        DataColumn(label: Text('Outcome', style: TextStyle(fontWeight: FontWeight.bold))),
+                      columns: [
+                        DataColumn(
+                          label: Row(
+                            children: [
+                              const Text('Patient ID',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Icon(
+                                _sortAscending
+                                    ? Icons.arrow_drop_up
+                                    : Icons.arrow_drop_down,
+                                size: 20,
+                              )
+                            ],
+                          ),
+                          onSort: (columnIndex, _) {
+                            _toggleSort();
+                          },
+                        ),
+                        const DataColumn(
+                            label: Text('Name',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        const DataColumn(
+                            label: Text('Age',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        const DataColumn(
+                            label: Text('Sex',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        const DataColumn(
+                            label: Text('Disease',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        const DataColumn(
+                            label: Text('District',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        const DataColumn(
+                            label: Text('Outcome',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        const DataColumn(
+                            label: Text('Region',
+                                style: TextStyle(fontWeight: FontWeight.bold))),
                       ],
                       rows: _currentPageCases.map((c) {
                         return DataRow(cells: [
@@ -142,6 +191,7 @@ class _TablePageState extends State<TablePage> {
                           DataCell(Text(c.disease ?? '')),
                           DataCell(Text(c.district ?? '')),
                           DataCell(Text(c.outcome ?? '')),
+                          DataCell(Text(c.region ?? '')),
                         ]);
                       }).toList(),
                     ),
@@ -150,7 +200,7 @@ class _TablePageState extends State<TablePage> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 8), // minimal spacing before pagination
 
             // Pagination Buttons
             Row(
@@ -161,7 +211,8 @@ class _TablePageState extends State<TablePage> {
                   icon: const Icon(Icons.arrow_back),
                   label: const Text('Previous'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
                 const SizedBox(width: 20),
@@ -170,12 +221,13 @@ class _TablePageState extends State<TablePage> {
                   icon: const Icon(Icons.arrow_forward),
                   label: const Text('Next'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
           ],
         ),
       ),

@@ -3,7 +3,7 @@ import 'pages/form_page.dart';
 import 'pages/charts_page.dart';
 import 'pages/table_page.dart';
 import 'api/idsr_api.dart';
-
+  
 class HomePage extends StatefulWidget {
   final VoidCallback toggleTheme; 
   final IdsrApi api;
@@ -35,27 +35,24 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  String getAppBarTitle() {
-    switch (_selectedIndex) {
-      case 0:
-        return "IDSR Form";
-      case 1:
-        return "Charts";
-      case 2:
-        return "Reports Table";
-      default:
-        return "";
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(getAppBarTitle()),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        centerTitle: false, // ✅ Left aligned
+        title: const Text(
+          "IDSR",   
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+            fontSize: 24, 
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.brightness_6),
+            icon: Icon(Icons.brightness_6, color: Colors.grey),
             tooltip: "Toggle Light/Dark Mode",
             onPressed: widget.toggleTheme,
           ),

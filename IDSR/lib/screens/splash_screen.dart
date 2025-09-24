@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
     });
 
     Timer(const Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacementNamed('/home');
+      Navigator.of(context).pushReplacementNamed('/welcome');
     });
   }
 
@@ -49,8 +49,8 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 30.0),
+          Padding(  
+            padding: const EdgeInsets.only(bottom: 41.0),        
             child: AnimatedOpacity(
               duration: const Duration(seconds: 8),
               opacity: _opacity,

@@ -8,31 +8,32 @@ void main() {
     // Build the app widget tree
     await tester.pumpWidget(const IdsrApp());
 
-    // Trigger a frame
-    await tester.pumpAndSettle();
+    // Trigger a frame      
+    await tester.pumpAndSettle();    
 
     // Verify the app title appears in the app bar initially (Splash tab)
-    expect(find.text('Welcome'), findsOneWidget);
+    expect(find.text('IDSR'), findsOneWidget);     
 
     // Tap on the 'Form' tab
     await tester.tap(find.byIcon(Icons.note_alt));
     await tester.pumpAndSettle();
 
     // Verify the Form page title appears
-    expect(find.text('IDSR Form'), findsOneWidget);
+    expect(find.text('IDSR'), findsOneWidget);
 
     // Tap on the 'Charts' tab
     await tester.tap(find.byIcon(Icons.show_chart));
     await tester.pumpAndSettle();
 
     // Verify the Charts page title appears
-    expect(find.text('Charts'), findsOneWidget);
+    expect(find.text('IDSR'), findsOneWidget);
 
     // Tap on the 'Table' tab
     await tester.tap(find.byIcon(Icons.table_chart));
     await tester.pumpAndSettle();
 
     // Verify the Table page title appears
-    expect(find.text('Table'), findsOneWidget);
+    expect(find.text('IDSR'), findsOneWidget);
   });
 }
+      

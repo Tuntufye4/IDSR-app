@@ -101,7 +101,7 @@ class _ChartsPageState extends State<ChartsPage> {
     final classifications = _cases.map((e) => e.caseClassification).whereType<String>().toSet().toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Disease Charts')),
+      appBar: AppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -153,88 +153,151 @@ class _ChartsPageState extends State<ChartsPage> {
             ),
             const SizedBox(height: 24),
 
-            // Bar Chart
+            // Bar Chart in Card
             if (_diseaseCounts.isNotEmpty)
-              SizedBox(
-                height: 250,
-                child: BarChart(
-                  BarChartData(
-                    barGroups: barGroups,
-                    borderData: FlBorderData(show: false),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: true),
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 24),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Cases by Disease",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            final index = value.toInt();
-                            if (index < 0 || index >= diseaseEntries.length) return const SizedBox.shrink();
-                            return SideTitleWidget(
-                              axisSide: meta.axisSide,
-                              child: Text(
-                                diseaseEntries[index].key,
-                                style: const TextStyle(fontSize: 10),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 250,
+                        child: BarChart(
+                          BarChartData(
+                            barGroups: barGroups,
+                            borderData: FlBorderData(show: false),
+                            titlesData: FlTitlesData(
+                              leftTitles: AxisTitles(
+                                sideTitles: SideTitles(showTitles: true),
                               ),
-                            );
-                          },
-                          reservedSize: 48,
+                              bottomTitles: AxisTitles(
+                                sideTitles: SideTitles(
+                                  showTitles: true,
+                                  getTitlesWidget: (value, meta) {
+                                    final index = value.toInt();
+                                    if (index < 0 || index >= diseaseEntries.length) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return SideTitleWidget(
+                                      axisSide: meta.axisSide,
+                                      child: Text(
+                                        diseaseEntries[index].key,
+                                        style: const TextStyle(fontSize: 10),
+                                      ),
+                                    );
+                                  },
+                                  reservedSize: 48,
+                                ),
+                              ),
+                              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            ),
+                            barTouchData: BarTouchData(
+                              enabled: true,
+                              touchTooltipData: BarTouchTooltipData(
+                                tooltipBgColor: Colors.grey.shade200,
+                                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                                  final disease = diseaseEntries[group.x.toInt()].key;
+                                  final count = rod.toY.toInt();
+                                  return BarTooltipItem(
+                                    '$disease\nCount: $count',
+                                    const TextStyle(color: Colors.black),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    ),
-                    barTouchData: BarTouchData(
-                      enabled: true,
-                      touchTooltipData: BarTouchTooltipData(
-                        tooltipBgColor: Colors.grey.shade200,
-                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          final disease = diseaseEntries[group.x.toInt()].key;
-                          final count = rod.toY.toInt();
-                          return BarTooltipItem('$disease\nCount: $count', const TextStyle(color: Colors.black));
-                        },
-                      ),
-                    ),
+                    ],
                   ),
                 ),
               ),
 
-            const SizedBox(height: 32),
-
-            // Interactive Pie Chart with tooltip
+            // Pie Chart in Card
             if (_groupedCounts.isNotEmpty)
-              SizedBox(
-                height: 300,
-                child: PieChart(
-                  PieChartData(
-                    sections: pieEntries.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final e = entry.value;
-                      final total = _groupedCounts.values.fold<int>(0, (a, b) => a + b);
-                      final percent = (e.value / total) * 100;
-                      final isTouched = _touchedPieIndex == index;
-                      return PieChartSectionData(
-                        value: e.value.toDouble(),
-                        color: Colors.primaries[index % Colors.primaries.length],
-                        radius: isTouched ? 90 : 80,
-                        title: isTouched ? '${e.key}\n${e.value} cases\n${percent.toStringAsFixed(1)}%' : '${percent.toStringAsFixed(1)}%',
-                        titleStyle: TextStyle(
-                          fontSize: isTouched ? 14 : 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        "Cases by ${_groupBy[0].toUpperCase()}${_groupBy.substring(1)}",
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 300,
+                        child: PieChart(
+                          PieChartData(
+                            sections: pieEntries.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final e = entry.value;
+                              final total = _groupedCounts.values.fold<int>(0, (a, b) => a + b);
+                              final percent = (e.value / total) * 100;
+                              final isTouched = _touchedPieIndex == index;
+                              return PieChartSectionData(
+                                value: e.value.toDouble(),
+                                color: Colors.primaries[index % Colors.primaries.length],
+                                radius: isTouched ? 90 : 80,
+                                title: isTouched
+                                    ? '${e.key}\n${e.value} cases\n${percent.toStringAsFixed(1)}%'
+                                    : '${percent.toStringAsFixed(1)}%',
+                                titleStyle: TextStyle(
+                                  fontSize: isTouched ? 14 : 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              );
+                            }).toList(),
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 40,
+                            pieTouchData: PieTouchData(
+                              touchCallback: (event, pieTouchResponse) {
+                                setState(() {
+                                  _touchedPieIndex = pieTouchResponse?.touchedSection?.touchedSectionIndex;
+                                });
+                              },
+                            ),
+                          ),
                         ),
-                      );
-                    }).toList(),
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 40,
-                    pieTouchData: PieTouchData(
-                      touchCallback: (event, pieTouchResponse) {
-                        setState(() {
-                          _touchedPieIndex = pieTouchResponse?.touchedSection?.touchedSectionIndex;
-                        });
-                      },
-                    ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Legend
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: pieEntries.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final e = entry.value;
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.primaries[index % Colors.primaries.length],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(e.key, style: const TextStyle(fontSize: 12)),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -244,4 +307,3 @@ class _ChartsPageState extends State<ChartsPage> {
     );
   }
 }
-      
