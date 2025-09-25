@@ -6,7 +6,7 @@ class TablePage extends StatefulWidget {
   final IdsrApi api;
 
   const TablePage({Key? key, required this.api}) : super(key: key);
-  
+
   @override
   State<TablePage> createState() => _TablePageState();
 }
@@ -18,6 +18,8 @@ class _TablePageState extends State<TablePage> {
 
   int _currentPage = 0;
   final int _pageSize = 10;
+
+  int? _sortColumnIndex;
   bool _sortAscending = true;
 
   @override
@@ -34,7 +36,7 @@ class _TablePageState extends State<TablePage> {
         _cases = cases;
         _filteredCases = cases;
         _currentPage = 0;
-        _sortByPatientId();
+        _sort<num>((c) => c.id ?? 0, 0, true);
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,22 +54,26 @@ class _TablePageState extends State<TablePage> {
             (c.district?.toLowerCase().contains(query) ?? false);
       }).toList();
       _currentPage = 0;
-      _sortByPatientId();
+      _sort<num>((c) => c.id ?? 0, 0, _sortAscending);
     });
   }
 
-  void _sortByPatientId() {
+  void _sort<T>(
+    Comparable<T>? Function(IdsrCase c) getField,
+    int columnIndex,
+    bool ascending,
+  ) {
     _filteredCases.sort((a, b) {
-      final idA = a.patientId ?? 0;
-      final idB = b.patientId ?? 0;
-      return _sortAscending ? idA.compareTo(idB) : idB.compareTo(idA);
+      final aValue = getField(a);
+      final bValue = getField(b);
+      return ascending
+          ? Comparable.compare(aValue ?? '' as Comparable<T>, bValue ?? '' as Comparable<T>)
+          : Comparable.compare(bValue ?? '' as Comparable<T>, aValue ?? '' as Comparable<T>);
     });
-  }
 
-  void _toggleSort() {
     setState(() {
-      _sortAscending = !_sortAscending;
-      _sortByPatientId();
+      _sortColumnIndex = columnIndex;
+      _sortAscending = ascending;
     });
   }
 
@@ -98,6 +104,7 @@ class _TablePageState extends State<TablePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: const Text('IDSR Cases'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -107,11 +114,10 @@ class _TablePageState extends State<TablePage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0), // only horizontal padding
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: Column(
           children: [
-            const SizedBox(height: 8), // minimal top spacing
-            // Search Box
+            const SizedBox(height: 8),
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -122,9 +128,7 @@ class _TablePageState extends State<TablePage> {
                 prefixIcon: const Icon(Icons.search),
               ),
             ),
-            const SizedBox(height: 8), // minimal spacing before table
-
-            // Table inside card
+            const SizedBox(height: 8),
             Expanded(
               child: Card(
                 shape: RoundedRectangleBorder(
@@ -135,56 +139,67 @@ class _TablePageState extends State<TablePage> {
                   scrollDirection: Axis.horizontal,
                   child: SingleChildScrollView(
                     child: DataTable(
-                      sortColumnIndex: 0,
+                      sortColumnIndex: _sortColumnIndex,
                       sortAscending: _sortAscending,
                       headingRowColor: MaterialStateColor.resolveWith(
-                          (states) => Colors.blueGrey.shade50),
+                        (states) => Colors.blueGrey.shade50,
+                      ),
                       columnSpacing: 20,
                       horizontalMargin: 12,
                       columns: [
                         DataColumn(
-                          label: Row(
-                            children: [
-                              const Text('Patient ID',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              Icon(
-                                _sortAscending
-                                    ? Icons.arrow_drop_up
-                                    : Icons.arrow_drop_down,
-                                size: 20,
-                              )
-                            ],
-                          ),
-                          onSort: (columnIndex, _) {
-                            _toggleSort();
-                          },
+                          label: const Text('ID',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onSort: (colIndex, asc) =>
+                              _sort<num>((c) => c.id ?? 0, colIndex, asc),
                         ),
-                        const DataColumn(
-                            label: Text('Name',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                        const DataColumn(
-                            label: Text('Age',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                        const DataColumn(
-                            label: Text('Sex',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                        const DataColumn(
-                            label: Text('Disease',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                        const DataColumn(
-                            label: Text('District',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                        const DataColumn(
-                            label: Text('Outcome',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
-                        const DataColumn(
-                            label: Text('Region',
-                                style: TextStyle(fontWeight: FontWeight.bold))),
+                        DataColumn(
+                          label: const Text('Name',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onSort: (colIndex, asc) =>
+                              _sort<String>((c) => c.fullName ?? '', colIndex, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('Age',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          numeric: true,
+                          onSort: (colIndex, asc) =>
+                              _sort<num>((c) => c.age ?? 0, colIndex, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('Sex',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onSort: (colIndex, asc) =>
+                              _sort<String>((c) => c.sex ?? '', colIndex, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('Disease',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onSort: (colIndex, asc) =>
+                              _sort<String>((c) => c.disease ?? '', colIndex, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('District',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onSort: (colIndex, asc) =>
+                              _sort<String>((c) => c.district ?? '', colIndex, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('Outcome',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onSort: (colIndex, asc) =>
+                              _sort<String>((c) => c.outcome ?? '', colIndex, asc),
+                        ),
+                        DataColumn(
+                          label: const Text('Region',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                          onSort: (colIndex, asc) =>
+                              _sort<String>((c) => c.region ?? '', colIndex, asc),
+                        ),
                       ],
                       rows: _currentPageCases.map((c) {
                         return DataRow(cells: [
-                          DataCell(Text(c.patientId?.toString() ?? '')),
+                          DataCell(Text(c.id?.toString() ?? '')),
                           DataCell(Text(c.fullName ?? '')),
                           DataCell(Text(c.age?.toString() ?? '')),
                           DataCell(Text(c.sex ?? '')),
@@ -199,10 +214,7 @@ class _TablePageState extends State<TablePage> {
                 ),
               ),
             ),
-
-            const SizedBox(height: 8), // minimal spacing before pagination
-
-            // Pagination Buttons
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -210,20 +222,12 @@ class _TablePageState extends State<TablePage> {
                   onPressed: _previousPage,
                   icon: const Icon(Icons.arrow_back),
                   label: const Text('Previous'),
-                  style: ElevatedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton.icon(
                   onPressed: _nextPage,
                   icon: const Icon(Icons.arrow_forward),
                   label: const Text('Next'),
-                  style: ElevatedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
                 ),
               ],
             ),

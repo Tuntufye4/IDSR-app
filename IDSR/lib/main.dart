@@ -28,11 +28,11 @@ class _IdsrAppState extends State<IdsrApp> {
   // For Android Emulator, use 10.0.2.2
   // For Android Device or iOS Simulator, replace with your local IP address
   final IdsrApi _api = IdsrApi(baseUrl: 'https://idsr-backend.onrender.com/api');                   
-
+   
   @override   
-  Widget build(BuildContext context) {      
-    return MaterialApp(  
-      title: 'IDSR',
+  Widget build(BuildContext context) {            
+    return MaterialApp(     
+      title: 'IDSR',   
       debugShowCheckedModeBanner: false,
       themeMode: _isDark ? ThemeMode.dark : ThemeMode.light,
       theme: ThemeData(

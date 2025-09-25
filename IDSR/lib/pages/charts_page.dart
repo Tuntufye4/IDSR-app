@@ -89,7 +89,7 @@ class _ChartsPageState extends State<ChartsPage> {
             toY: data.value.toDouble(),
             color: Colors.blue,
             width: 16,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(4),   
           )
         ],
         showingTooltipIndicators: [0],
@@ -103,7 +103,7 @@ class _ChartsPageState extends State<ChartsPage> {
     return Scaffold(
       appBar: AppBar(),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),    
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -200,7 +200,7 @@ class _ChartsPageState extends State<ChartsPage> {
                               rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                             ),
-                            barTouchData: BarTouchData(
+                            barTouchData: BarTouchData(      
                               enabled: true,
                               touchTooltipData: BarTouchTooltipData(
                                 tooltipBgColor: Colors.grey.shade200,

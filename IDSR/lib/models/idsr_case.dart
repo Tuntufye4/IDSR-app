@@ -1,8 +1,8 @@
 class IdsrCase {
-  final int? patientId;
+  final int? id; // backend-generated ID
   final String? fullName;
   final int? age;
-  final String? sex;
+  final String? sex;   
   final DateTime? dateOfBirth;
   final String? nationalId;
 
@@ -51,7 +51,7 @@ class IdsrCase {
   final String? observations;
 
   IdsrCase({
-    this.patientId,
+    this.id,
     this.fullName,
     this.age,
     this.sex,
@@ -97,7 +97,7 @@ class IdsrCase {
   });
 
   factory IdsrCase.fromJson(Map<String, dynamic> json) => IdsrCase(
-        patientId: int.tryParse(json['patient_id'].toString()),
+        id: json['id'],
         fullName: json['full_name'],
         age: json['age'],
         sex: json['sex'],
@@ -143,43 +143,43 @@ class IdsrCase {
       );
 
   Map<String, dynamic> toJson() => {
-        'patient_id': patientId,
+        'id': id,
         'full_name': fullName,
         'age': age,
         'sex': sex,
-        'date_of_birth': dateOfBirth?.toIso8601String(),
+        'date_of_birth': _formatDate(dateOfBirth),
         'national_id': nationalId,
         'village': village,
         'traditional_authority': traditionalAuthority,
         'health_facility': healthFacility,
         'district': district,
         'region': region,
-        'date_onset_symptoms': dateOnsetSymptoms?.toIso8601String(),
-        'date_first_seen': dateFirstSeen?.toIso8601String(),
+        'date_onset_symptoms': _formatDate(dateOnsetSymptoms),
+        'date_first_seen': _formatDate(dateFirstSeen),
         'disease': disease,
         'case_classification': caseClassification,
         'outcome': outcome,
-        'date_of_death': dateOfDeath?.toIso8601String(),
+        'date_of_death': _formatDate(dateOfDeath),
         'diagnosis_type': diagnosisType,
         'specimen_collected': specimenCollected,
-        'date_specimen_collected': dateSpecimenCollected?.toIso8601String(),
+        'date_specimen_collected': _formatDate(dateSpecimenCollected),
         'specimen_type': specimenType,
         'lab_name': labName,
         'specimen_sent_to_lab': specimenSentToLab,
         'lab_result': labResult,
-        'date_result_received': dateResultReceived?.toIso8601String(),
+        'date_result_received': _formatDate(dateResultReceived),
         'final_case_classification': finalCaseClassification,
         'vaccination_status': vaccinationStatus,
-        'date_last_vaccination': dateLastVaccination?.toIso8601String(),
+        'date_last_vaccination': _formatDate(dateLastVaccination),
         'contact_with_confirmed_case': contactWithConfirmedCase,
         'recent_travel_history': recentTravelHistory,
         'travel_destination': travelDestination,
         'reporter_name': reporterName,
         'designation': designation,
         'contact_number': contactNumber,
-        'date_reported': dateReported?.toIso8601String(),
+        'date_reported': _formatDate(dateReported),
         'form_completed_by': formCompletedBy,
-        'date_form_completed': dateFormCompleted?.toIso8601String(),
+        'date_form_completed': _formatDate(dateFormCompleted),
         'reporting_week_number': reportingWeekNumber,
         'year': year,
         'health_facility_code': healthFacilityCode,
@@ -198,5 +198,10 @@ class IdsrCase {
     if (value == null) return null;
     return value.toString();
   }
+
+  static String? _formatDate(DateTime? date) {
+    if (date == null) return null;
+    return date.toIso8601String().split('T')[0];
+  }
 }
-  
+   
