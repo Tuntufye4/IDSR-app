@@ -10,7 +10,7 @@ class ChartsPage extends StatefulWidget {
 
   @override
   State<ChartsPage> createState() => _ChartsPageState();
-}
+}   
 
 class _ChartsPageState extends State<ChartsPage> {
   List<IdsrCase> _cases = [];
@@ -89,10 +89,9 @@ class _ChartsPageState extends State<ChartsPage> {
             toY: data.value.toDouble(),
             color: Colors.blue,
             width: 16,
-            borderRadius: BorderRadius.circular(4),   
+            borderRadius: BorderRadius.circular(4),
           )
         ],
-        showingTooltipIndicators: [0],
       );
     }).toList();
 
@@ -103,7 +102,7 @@ class _ChartsPageState extends State<ChartsPage> {
     return Scaffold(
       appBar: AppBar(),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),    
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), // charts close to AppBar
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -151,7 +150,7 @@ class _ChartsPageState extends State<ChartsPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Bar Chart in Card
             if (_diseaseCounts.isNotEmpty)
@@ -176,11 +175,11 @@ class _ChartsPageState extends State<ChartsPage> {
                             borderData: FlBorderData(show: false),
                             titlesData: FlTitlesData(
                               leftTitles: AxisTitles(
-                                sideTitles: SideTitles(showTitles: true),
+                                sideTitles: SideTitles(showTitles: true), // Y-axis counts
                               ),
                               bottomTitles: AxisTitles(
                                 sideTitles: SideTitles(
-                                  showTitles: true,
+                                  showTitles: true, // show disease names
                                   getTitlesWidget: (value, meta) {
                                     final index = value.toInt();
                                     if (index < 0 || index >= diseaseEntries.length) {
@@ -200,19 +199,8 @@ class _ChartsPageState extends State<ChartsPage> {
                               rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                             ),
-                            barTouchData: BarTouchData(      
-                              enabled: true,
-                              touchTooltipData: BarTouchTooltipData(
-                                tooltipBgColor: Colors.grey.shade200,
-                                getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                  final disease = diseaseEntries[group.x.toInt()].key;
-                                  final count = rod.toY.toInt();
-                                  return BarTooltipItem(
-                                    '$disease\nCount: $count',
-                                    const TextStyle(color: Colors.black),
-                                  );
-                                },
-                              ),
+                            barTouchData: BarTouchData(
+                              enabled: false, // tooltips disabled
                             ),
                           ),
                         ),
@@ -250,9 +238,7 @@ class _ChartsPageState extends State<ChartsPage> {
                                 value: e.value.toDouble(),
                                 color: Colors.primaries[index % Colors.primaries.length],
                                 radius: isTouched ? 90 : 80,
-                                title: isTouched
-                                    ? '${e.key}\n${e.value} cases\n${percent.toStringAsFixed(1)}%'
-                                    : '${percent.toStringAsFixed(1)}%',
+                                title: '${percent.toStringAsFixed(1)}%',
                                 titleStyle: TextStyle(
                                   fontSize: isTouched ? 14 : 12,
                                   fontWeight: FontWeight.bold,
@@ -265,7 +251,8 @@ class _ChartsPageState extends State<ChartsPage> {
                             pieTouchData: PieTouchData(
                               touchCallback: (event, pieTouchResponse) {
                                 setState(() {
-                                  _touchedPieIndex = pieTouchResponse?.touchedSection?.touchedSectionIndex;
+                                  _touchedPieIndex =
+                                      pieTouchResponse?.touchedSection?.touchedSectionIndex;
                                 });
                               },
                             ),
